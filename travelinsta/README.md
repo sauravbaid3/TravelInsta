@@ -35,10 +35,13 @@ Docs: [Supabase MCP](https://supabase.com/docs/guides/getting-started/mcp).
    npm install
    ```
 
+   If your Cursor/workspace root is the **parent** folder (`travel_insta` instead of `travelinsta`), you can still run **`npm run db:push`**, **`npm start`**, and **`npm run verify`** from the parent — that folder has a small `package.json` that forwards into `./travelinsta`.
+
 2. Copy `.env.example` to `.env` and fill in:
 
    - `TELEGRAM_BOT_TOKEN` — from BotFather
    - `GEMINI_API_KEY` — from Google AI Studio
+   - `GEMINI_MODEL` — optional; default is `gemini-3.1-flash-lite-preview` (set if you need another model)
    - `ALLOWED_CHAT_IDS` — comma-separated Telegram user/chat IDs (only these chats can use the bot)
    - `SUPABASE_URL` — Project URL
    - `SUPABASE_SERVICE_KEY` — **Service role** key (not anon). The bot enforces access via `ALLOWED_CHAT_IDS`.
@@ -166,6 +169,20 @@ create table if not exists party_payments (
   notes         text
 );
 ```
+
+## Hosting on Render
+
+Use a **Background Worker** (not a Web Service): this app has no HTTP server and uses **Telegram polling** plus **Puppeteer**.
+
+1. Push the **`travelinsta`** folder as a Git repo (or set **Root Directory** to `travelinsta` if the repo contains a parent folder).
+2. In [Render Dashboard](https://dashboard.render.com) → **New** → **Background Worker**, connect the repo, or use **Blueprint** and point at `render.yaml`.
+3. Render will build the **Dockerfile** (includes system **Chromium**; `PUPPETEER_EXECUTABLE_PATH` is set for PDFs).
+4. In the service **Environment** tab, set the same variables as `.env.example` (`TELEGRAM_BOT_TOKEN`, `GEMINI_API_KEY`, `ALLOWED_CHAT_IDS`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`). Optional: `GEMINI_MODEL`.
+5. Deploy. Check **Logs** for `Travelinsta bot is running…`.
+
+**Memory:** PDF generation needs a fair bit of RAM. If the worker crashes on invoice generation, upgrade the instance (e.g. **Standard**) in Render.
+
+**Note:** Render’s **free** worker tier may change or be unavailable for Docker; if the Blueprint fails, pick a paid **Starter** (or higher) plan.
 
 ## Bot commands
 

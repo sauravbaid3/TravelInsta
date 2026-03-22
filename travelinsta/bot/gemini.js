@@ -4,6 +4,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+/** Override with GEMINI_MODEL in .env (e.g. gemini-3.1-flash-lite-preview). */
+export const GEMINI_MODEL =
+  process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-lite-preview';
+
 const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
 
@@ -39,6 +43,11 @@ STRICT RULES:
   flights and hotels. Capture all of them in arrays.
 - All dates must be YYYY-MM-DD format.
 - All times must be HH:MM 24-hour format.
+- For travellers: use passengers (and hotel.guests, nested tour flight passengers) as
+  an array of objects: { "name": "Full Name", "gender": null or "Male" or "Female" or "Other" }.
+  Extract gender ONLY when explicitly stated in the document (e.g. Mr/Ms, M/F, Male/Female).
+  If not written, use null. You may also use a plain string for name-only legacy shape
+  when gender is unknown: "Full Name" — but prefer objects when any gender is known.
 - Return ONLY raw valid JSON. No markdown fences.
   No explanation. No extra text. Just the JSON object.
 
@@ -141,7 +150,7 @@ function getModel(systemInstruction) {
   if (!key) throw new Error('GEMINI_API_KEY missing');
   const genAI = new GoogleGenerativeAI(key);
   return genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-lite',
+    model: GEMINI_MODEL,
     systemInstruction,
   });
 }

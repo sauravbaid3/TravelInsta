@@ -54,12 +54,26 @@ export async function createPartyPayment({
   return data;
 }
 
-export async function createPassengers(bookingId, namesArray) {
-  const names = Array.isArray(namesArray) ? namesArray : [];
-  const rows = names
-    .map((n) => (typeof n === 'string' ? n.trim() : String(n || '').trim()))
-    .filter(Boolean)
-    .map((name) => ({ booking_id: bookingId, name }));
+export async function createPassengers(bookingId, passengersInput) {
+  const list = Array.isArray(passengersInput) ? passengersInput : [];
+  const rows = list
+    .map((item) => {
+      if (typeof item === 'string') {
+        const name = item.trim();
+        return name ? { booking_id: bookingId, name, gender: null } : null;
+      }
+      if (item && typeof item === 'object' && typeof item.name === 'string') {
+        const name = item.name.trim();
+        if (!name) return null;
+        const gender =
+          item.gender != null && String(item.gender).trim()
+            ? String(item.gender).trim()
+            : null;
+        return { booking_id: bookingId, name, gender };
+      }
+      return null;
+    })
+    .filter(Boolean);
   if (rows.length === 0) return [];
   const { data, error } = await supabase.from('passengers').insert(rows).select();
   if (error) throw error;

@@ -9,6 +9,7 @@ import { getSession, updateSession, setSession, clearSession } from '../sessions
 import { createBooking, getBookingById } from '../db/bookings.js';
 import { findSupplierByName, createSupplier } from '../db/suppliers.js';
 import { createPassengers } from '../db/payments.js';
+import { collectPassengers } from '../passengerExtract.js';
 import { generateInvoicePDF } from '../invoiceGenerator.js';
 import { createRequire } from 'module';
 
@@ -23,38 +24,6 @@ async function inputToOriginalString(input) {
     return (res.text || '').trim().slice(0, 12000);
   }
   return String(input || '').trim().slice(0, 12000);
-}
-
-function collectPassengerNames(extracted) {
-  const map = new Map();
-  const add = (raw) => {
-    const t = String(raw || '').trim();
-    if (!t) return;
-    const key = t.toLowerCase();
-    if (!map.has(key)) map.set(key, t);
-  };
-  if (extracted && Array.isArray(extracted.passengers)) {
-    for (const p of extracted.passengers) {
-      if (typeof p === 'string') add(p);
-      else if (p && typeof p.name === 'string') add(p.name);
-    }
-  }
-  const hotel = extracted?.hotel;
-  if (hotel && Array.isArray(hotel.guests)) {
-    for (const g of hotel.guests) {
-      if (typeof g === 'string') add(g);
-      else if (g && typeof g.name === 'string') add(g.name);
-    }
-  }
-  const tour = extracted?.tour;
-  if (tour && Array.isArray(tour.flights)) {
-    for (const fl of tour.flights) {
-      if (fl && Array.isArray(fl.passengers)) {
-        for (const p of fl.passengers) add(p);
-      }
-    }
-  }
-  return Array.from(map.values());
 }
 
 function mapExtractedToBookingRow(session) {
@@ -378,8 +347,8 @@ export async function handleNewBookingCallback(bot, query) {
     try {
       const row = mapExtractedToBookingRow(s);
       booking = await createBooking(row);
-      const names = collectPassengerNames(s.extracted);
-      await createPassengers(booking.id, names);
+      const pax = collectPassengers(s.extracted);
+      await createPassengers(booking.id, pax);
     } catch {
       await bot.sendMessage(chatId, 'Something went wrong saving. Try again.', {
         parse_mode: 'Markdown',

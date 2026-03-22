@@ -7,12 +7,26 @@ const ALT = '#f5f7fa';
 const TEXT = '#333333';
 const MUTED = '#666666';
 
+const AGENCY_PHONE = '+91-9123286237';
+const AGENCY_EMAIL = 'thetravelinstaofficial@gmail.com';
+const PAYMENT_UPI = 'rishavb677@ybl';
+
 function escapeHtml(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function agencyAddressHtml() {
+  return [
+    '2nd Floor',
+    '16/1, Gangadhar Sen Ln, Nainan Para, Baranagar',
+    'West Bengal 700036',
+  ]
+    .map((line) => escapeHtml(line))
+    .join('<br/>');
 }
 
 function fmtDate(iso) {
@@ -24,14 +38,15 @@ function fmtDate(iso) {
 
 function bookingTypeLabel(bt) {
   const m = {
-    flight: '✈️ Flight',
-    hotel: '🏨 Hotel',
-    tour_package: '🌍 Tour Package',
-    train: '🚂 Train',
-    bus: '🚌 Bus',
-    other: '📋 Other',
+    flight: 'Flight',
+    hotel: 'Hotel',
+    tour_package: 'Tour Package',
+    train: 'Train',
+    bus: 'Bus',
+    other: 'Other',
   };
-  return m[bt] || m.other;
+  const k = (bt || 'other').toLowerCase();
+  return m[k] || m.other;
 }
 
 function rowsFromFlight(b) {
@@ -141,8 +156,8 @@ export async function generateInvoicePDF(booking) {
     <div>
       <div style="font-size:28px;font-weight:800;color:${PRIMARY};letter-spacing:1px;">TRAVELINSTA</div>
       <div style="color:${MUTED};font-size:12px;margin-top:4px;">Your Trusted Travel Partner</div>
-      <div style="margin-top:10px;font-size:12px;color:${TEXT};">New Delhi, India</div>
-      <div style="font-size:12px;color:${TEXT};">Phone: +91-XXXXXXXXXX &nbsp; Email: info@travelinsta.in</div>
+      <div style="margin-top:10px;font-size:12px;color:${TEXT};line-height:1.5;">${agencyAddressHtml()}</div>
+      <div style="font-size:12px;color:${TEXT};margin-top:8px;">Phone: ${escapeHtml(AGENCY_PHONE)} &nbsp; Email: ${escapeHtml(AGENCY_EMAIL)}</div>
     </div>
     <div style="text-align:right;">
       <div style="font-size:22px;font-weight:700;color:${PRIMARY};">INVOICE</div>
@@ -183,18 +198,25 @@ export async function generateInvoicePDF(booking) {
   </div>
   <div style="margin-top:22px;background:${ALT};padding:16px 18px;border-radius:8px;">
     <div style="font-weight:700;color:${PRIMARY};margin-bottom:8px;">PAYMENT DETAILS</div>
-    <div style="font-size:13px;line-height:1.7;">UPI ID: travelinsta@upi<br/>Bank: State Bank of India<br/>Account Name: Travelinsta<br/>Account No: XXXXXXXXXXXX<br/>IFSC: SBIN0XXXXXX</div>
+    <div style="font-size:13px;line-height:1.7;">UPI: ${escapeHtml(PAYMENT_UPI)}</div>
   </div>
   <div style="margin-top:28px;padding-top:14px;border-top:2px solid ${PRIMARY};text-align:center;color:${MUTED};font-size:11px;line-height:1.6;">
     Thank you for choosing Travelinsta!<br/>
-    For queries contact: info@travelinsta.in | +91-XXXXXXXXXX<br/>
+    For queries contact: ${escapeHtml(AGENCY_EMAIL)} | ${escapeHtml(AGENCY_PHONE)}<br/>
     This is a computer-generated invoice.
   </div>
 </body></html>`;
 
+  const execPath = process.env.PUPPETEER_EXECUTABLE_PATH?.trim();
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=medium'],
+    ...(execPath ? { executablePath: execPath } : {}),
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--font-render-hinting=medium',
+    ],
   });
   try {
     const page = await browser.newPage();

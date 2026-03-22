@@ -1,3 +1,5 @@
+import { collectPassengers } from './passengerExtract.js';
+
 export function formatMoney(amount) {
   const n = Number(amount) || 0;
   const f = new Intl.NumberFormat('en-IN', {
@@ -11,30 +13,11 @@ function escMd(s) {
   return String(s || '').replace(/[`*_]/g, ' ');
 }
 
+/** Display strings for Telegram (name, optional gender). */
 function passengerList(data) {
-  const list = [];
-  if (Array.isArray(data.passengers)) {
-    for (const p of data.passengers) {
-      if (typeof p === 'string' && p.trim()) list.push(p.trim());
-      else if (p && typeof p.name === 'string' && p.name.trim()) list.push(p.name.trim());
-    }
-  }
-  if (data.hotel && Array.isArray(data.hotel.guests)) {
-    for (const g of data.hotel.guests) {
-      if (typeof g === 'string' && g.trim()) list.push(g.trim());
-      else if (g && typeof g.name === 'string' && g.name.trim()) list.push(g.name.trim());
-    }
-  }
-  if (data.tour && Array.isArray(data.tour.flights)) {
-    for (const fl of data.tour.flights) {
-      if (fl && Array.isArray(fl.passengers)) {
-        for (const p of fl.passengers) {
-          if (typeof p === 'string' && p.trim()) list.push(p.trim());
-        }
-      }
-    }
-  }
-  return [...new Set(list)];
+  return collectPassengers(data || {}).map(({ name, gender }) =>
+    gender ? `${name} (${gender})` : name
+  );
 }
 
 function line(label, value) {
