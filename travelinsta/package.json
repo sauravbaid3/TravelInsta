@@ -1,0 +1,30 @@
+{
+  "name": "travelinsta",
+  "version": "1.0.0",
+  "description": "Travel agency management — Telegram bot, ledgers, PDF invoices",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node bot/index.js",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:status": "supabase status",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --linked -o types/database.types.ts"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "@google/generative-ai": "^0.21.0",
+    "@supabase/supabase-js": "^2.43.0",
+    "pdf-parse": "^1.1.1",
+    "puppeteer": "^22.0.0",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.48.0"
+  }
+}

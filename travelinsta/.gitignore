@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+.DS_Store
+.npm
+.cache/
+
+# Supabase CLI (local + link state)
+supabase/.temp/
+supabase/.branches/
