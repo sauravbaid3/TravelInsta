@@ -1,5 +1,5 @@
-# Render Blueprint: Background Worker (Telegram polling + PDF).
-# Repo root should be this folder (travelinsta), or set dockerContext / path in Dashboard.
+# Render Blueprint when Git repo root IS this `travelinsta` folder only.
+# If your repo root is the parent directory, use ../render.yaml instead (already there).
 services:
   - type: worker
     name: travelinsta-bot
